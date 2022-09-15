@@ -1,0 +1,12 @@
+{
+  "name": "google-app-script-api-example",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "setup": "source .env && cp .clasp.json.template .clasp.json && sed -i \"\" -e \"s/<YOUR_SCRIPT_ID>/${YOUR_SCRIPT_ID}/\" .clasp.json",
+    "deploy": "clasp push"
+  },
+  "devDependencies": {
+    "@types/google-apps-script": "^1.0.55"
+  }
+}
