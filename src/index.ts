@@ -1,6 +1,7 @@
 const doGet = (e: GoogleAppsScript.Events.DoGet) => {
+  const { parameter: params } = e;
   const body = {
-    message: `GET`,
+    params,
   };
   const response = ContentService.createTextOutput();
   response.setMimeType(ContentService.MimeType.JSON);
