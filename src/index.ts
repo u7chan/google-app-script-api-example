@@ -1,33 +1,58 @@
+const testDoGet = () => {
+  // TODO
+};
+
+const testDoPost = () => {
+  // TODO
+};
+
+const dispatchGet = (params: { [key: string]: string }): Object => {
+  try {
+    return {
+      params,
+    };
+  } catch {
+    return {
+      code: `Error`,
+      message: `Internal Server Error`,
+    };
+  }
+};
+
+const dispatchPost = (contentType: string, rawJSON: string): Object => {
+  try {
+    return {
+      contentType,
+      body: analyzeJSON(rawJSON),
+    };
+  } catch {
+    return {
+      code: `Error`,
+      message: `Internal Server Error`,
+    };
+  }
+};
+
 const doGet = (e: GoogleAppsScript.Events.DoGet) => {
   const { parameter: params } = e;
-  const body = {
-    params,
-  };
-  const response = ContentService.createTextOutput();
-  response.setMimeType(ContentService.MimeType.JSON);
-  response.setContent(JSON.stringify(body));
-  return response;
+  const result = dispatchGet(params);
+  return createJSONResponder(dispatchGet(params));
 };
 
 const doPost = (e: GoogleAppsScript.Events.DoPost) => {
-  let body = {};
-  try {
-    const { type, contents } = e.postData || {
-      type: ``,
-      contents: null,
-    };
-    body = {
-      contentType: type,
-      request: analyzeJSON(contents),
-    };
-  } catch {
-    body = {
-      error: `Internal Server Error`,
-    };
-  }
+  const { type: contentType, contents } = e.postData || {
+    type: ``,
+    contents: null,
+  };
+  return createJSONResponder(dispatchPost(contentType, contents));
+};
+
+const createJSONResponder = (
+  data: any
+): GoogleAppsScript.Content.TextOutput => {
   const response = ContentService.createTextOutput();
   response.setMimeType(ContentService.MimeType.JSON);
-  response.setContent(JSON.stringify(body));
+  response.setContent(JSON.stringify(data));
   return response;
 };
 
