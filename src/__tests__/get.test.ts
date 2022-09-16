@@ -8,7 +8,7 @@ describe('get.test', () => {
     // When
     const actual = dispatchGet(expected);
 
-    // THen
+    // Then
     expect(actual).toStrictEqual(expected);
   });
 });
