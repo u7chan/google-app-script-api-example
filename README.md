@@ -40,12 +40,6 @@
    YOUR_SCRIPT_ID= ...
    ```
 
-1. Do update for `.clasp.json`
-
-   ```sh
-   % yarn setup
-   ```
-
 ## Deploy
 
 1. Force writes all local files to `script.google.com`

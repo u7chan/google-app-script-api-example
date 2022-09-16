@@ -1,15 +1,7 @@
-const testDoGet = () => {
-  // TODO
-};
-
-const testDoPost = () => {
-  // TODO
-};
-
-const dispatchGet = (params: { [key: string]: string }): Object => {
+export const dispatchGet = (params: { [key: string]: string }): Object => {
   try {
     return {
-      params,
+      ...params,
     };
   } catch {
     return {
@@ -19,7 +11,7 @@ const dispatchGet = (params: { [key: string]: string }): Object => {
   }
 };
 
-const dispatchPost = (contentType: string, rawJSON: string): Object => {
+export const dispatchPost = (contentType: string, rawJSON: string): Object => {
   try {
     return {
       contentType,
