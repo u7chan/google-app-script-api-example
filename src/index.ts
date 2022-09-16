@@ -35,7 +35,6 @@ const dispatchPost = (contentType: string, rawJSON: string): Object => {
 
 const doGet = (e: GoogleAppsScript.Events.DoGet) => {
   const { parameter: params } = e;
-  const result = dispatchGet(params);
   return createJSONResponder(dispatchGet(params));
 };
 
