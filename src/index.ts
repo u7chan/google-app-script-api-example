@@ -1,12 +1,62 @@
-export const dispatchGet = (params: { [key: string]: string }): Object => {
+// ----------------------------------------------------------------------------
+// types
+// ----------------------------------------------------------------------------
+
+type ApiError = {
+  code?: string;
+  message?: string;
+};
+
+type Accounts = {
+  id: string;
+  name: string;
+};
+
+type Tasks = {
+  id: string;
+  title: string;
+  content: string;
+  lastUpdated: string;
+};
+
+type Resources = {
+  accounts: Accounts;
+  tasks: Tasks;
+};
+
+type Resource = keyof Resources;
+const resourceKeys: string[] = ['accounts', 'tasks'] as Array<keyof Resources>;
+
+type Result = ApiError | Accounts | Tasks;
+
+// ----------------------------------------------------------------------------
+// errors
+// ----------------------------------------------------------------------------
+
+class InvalidResourceError extends Error {
+  constructor() {
+    super();
+    this.message = 'Invalid Resource';
+  }
+}
+
+// ----------------------------------------------------------------------------
+// dispatcher
+// ----------------------------------------------------------------------------
+
+export const dispatchGet = (params: { [key: string]: string }): Result => {
   try {
+    const { path: resource = ``, ...rest } = params;
+    return dataProvider(toResource(resource), rest);
+  } catch (e: unknown) {
+    const code = `Error`;
+    let message = `Internal Server Error`;
+    if (e instanceof InvalidResourceError) {
+      message = e.message;
+    }
     return {
-      ...params,
-    };
-  } catch {
-    return {
-      code: `Error`,
-      message: `Internal Server Error`,
+      code,
+      message,
     };
   }
 };
@@ -19,11 +69,15 @@ export const dispatchPost = (contentType: string, rawJSON: string): Object => {
     };
   } catch {
     return {
-      code: `Error`,
-      message: `Internal Server Error`,
+      code: 'Error',
+      message: 'Internal Server Error',
     };
   }
 };
+
+// ----------------------------------------------------------------------------
+// api handler
+// ----------------------------------------------------------------------------
 
 const doGet = (e: GoogleAppsScript.Events.DoGet) => {
   const { parameter: params } = e;
@@ -32,14 +86,18 @@ const doGet = (e: GoogleAppsScript.Events.DoGet) => {
 
 const doPost = (e: GoogleAppsScript.Events.DoPost) => {
   const { type: contentType, contents } = e.postData || {
-    type: ``,
+    type: '',
     contents: null,
   };
   return createJSONResponder(dispatchPost(contentType, contents));
 };
 
+// ----------------------------------------------------------------------------
+// utils
+// ----------------------------------------------------------------------------
+
 const createJSONResponder = (
-  data: any
+  data: Result
 ): GoogleAppsScript.Content.TextOutput => {
   const response = ContentService.createTextOutput();
   response.setMimeType(ContentService.MimeType.JSON);
@@ -53,4 +111,32 @@ const analyzeJSON = (rawJSON: string): object | null => {
   } catch {
     return null;
   }
+};
+
+/**
+ * @throws {InvalidResourceError}
+ */
+const toResource = (resource: string): Resource => {
+  if (!resourceKeys.includes(resource)) {
+    throw new InvalidResourceError();
+  }
+  return resource as Resource;
+};
+
+// ----------------------------------------------------------------------------
+// data
+// ----------------------------------------------------------------------------
+
+type DataProvider = {
+  read: <T extends Result>() => T;
+  readMany: <T extends Result>() => T[];
+  create: <T extends Result>(data: T) => void;
+  delete: (resource: Resource, id: string) => void;
+};
+
+const dataProvider = <T extends Result>(
+  resource: Resource,
+  params: { [key: string]: string }
+): T => {
+  return {} as any; // TODO
 };
