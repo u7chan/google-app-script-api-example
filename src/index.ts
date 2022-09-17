@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// types
+// api types
 // ----------------------------------------------------------------------------
 
 type ApiError = {
@@ -99,7 +99,7 @@ const doPost = (e: GoogleAppsScript.Events.DoPost) => {
 };
 
 // ----------------------------------------------------------------------------
-// utils
+// api utils
 // ----------------------------------------------------------------------------
 
 const createJSONResponder = (
@@ -174,3 +174,122 @@ export const createMockProvider = (
 });
 
 const dataProvider: DataProvider = SpreadsheetProvider; // inject
+
+// ----------------------------------------------------------------------------
+// spreadsheet types
+// ----------------------------------------------------------------------------
+
+const ERROR_OPEN_SPREADSHEET_FAILED = `[ERROR] Open SpreadSheet Failed: "{0}"`;
+const ERROR_OPEN_SHEET_FAILED = `[ERROR] Open Sheet Failed: "{0}"`;
+
+type SpreadsheetFieldType = 'number' | 'string';
+
+type SpreadsheetScheme = {
+  field: string;
+  fieldType: SpreadsheetFieldType;
+};
+
+// ----------------------------------------------------------------------------
+// spreadsheet api
+// ----------------------------------------------------------------------------
+
+const getSpreadsheetRecords = <T>(
+  fileName: string,
+  sheetName: string,
+  scheme: SpreadsheetScheme[]
+) => {
+  const spreadsheet = getSpreadsheetByName(fileName);
+  if (!spreadsheet) {
+    throw new Error(
+      createErrorString(ERROR_OPEN_SPREADSHEET_FAILED, [fileName])
+    );
+  }
+  const sheet = getSheetByName(spreadsheet, sheetName);
+  if (!sheet) {
+    throw new Error(createErrorString(ERROR_OPEN_SHEET_FAILED, [sheetName]));
+  }
+  return getSheetRecords<T>(sheet, scheme);
+};
+
+const toCast = (value: any, fieldType: SpreadsheetFieldType) => {
+  switch (fieldType) {
+    case 'number':
+      return parseInt(value).toFixed();
+    case 'string':
+      return `${value}`;
+  }
+};
+
+const getSheetRecords = <T>(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  sheetScheme: SpreadsheetScheme[]
+): T[] => {
+  return sheet
+    .getDataRange()
+    .getValues()
+    .slice(1)
+    .map((row) => {
+      return sheetScheme
+        .map(({ field, fieldType }, i) => ({
+          [field]: toCast(row[i], fieldType),
+        }))
+        .reduce((preview, current) => ({ ...preview, ...current }), {} as T);
+    });
+};
+
+// ----------------------------------------------------------------------------
+// spreadsheet utils
+// ----------------------------------------------------------------------------
+
+/**
+ * ファイル名でスプレッドシートのオブジェクトを取得する
+ *
+ * @param fileName ファイル名(拡張子を除く)
+ * @returns スプレッドシートのオブジェクト / null
+ */
+const getSpreadsheetByName = (
+  fileName: string
+): GoogleAppsScript.Spreadsheet.Spreadsheet | null => {
+  const files = DriveApp.getFilesByType(
+    'application/vnd.google-apps.spreadsheet'
+  );
+  while (files.hasNext()) {
+    const doc = files.next();
+    if (doc.getName() === fileName) return SpreadsheetApp.open(doc);
+  }
+  return null;
+};
+
+/**
+ * シート名からシートのオブジェクトを取得する
+ *
+ * @param spreadSheet スプレッドシート
+ * @param sheetName シート名
+ * @returns シートのオブジェクト / null
+ */
+const getSheetByName = (
+  spreadSheet: GoogleAppsScript.Spreadsheet.Spreadsheet | null,
+  sheetName: string
+): GoogleAppsScript.Spreadsheet.Sheet => {
+  const result = spreadSheet
+    .getSheets()
+    .filter((sheet) => sheet.getName() == sheetName);
+  return result.length > 0 ? result[0] : null;
+};
+
+/**
+ * エラー文字列を生成する
+ * 引数を埋め込む場合は、文字列中に波括弧を埋込む
+ * (例) {0}={1}
+ *
+ * @param errorMessage エラーメッセージ
+ * @param args エラーメッセージに埋め込む引数
+ * @returns エラー文字列
+ */
+const createErrorString = (errorMessage: string, args: any[] = []): string => {
+  let ret = errorMessage;
+  args.forEach((value, index) => {
+    ret = ret.replace(`{${index}}`, value);
+  });
+  return ret;
+};
