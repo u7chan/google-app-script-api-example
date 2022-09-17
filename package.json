@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "deploy": "./run-build.sh",
+    "build": "./run-build.sh",
+    "deploy": "yarn build && clasp push",
     "test": "jest"
   },
   "devDependencies": {

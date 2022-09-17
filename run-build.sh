@@ -14,5 +14,3 @@ cp appsscript.json $BUILD_DIR/appsscript.json
 cp src/index.ts $BUILD_DIR/index.ts
 
 sed -i "" -e "s/<YOUR_SCRIPT_ID>/$YOUR_SCRIPT_ID/" $BUILD_DIR/.clasp.json
-
-clasp push
