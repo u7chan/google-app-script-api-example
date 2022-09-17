@@ -197,7 +197,7 @@ const getSpreadsheetRecords = <T>(
   fileName: string,
   sheetName: string,
   scheme: SpreadsheetScheme[]
-) => {
+): T[] => {
   const spreadsheet = getSpreadsheetByName(fileName);
   if (!spreadsheet) {
     throw new Error(
@@ -211,7 +211,10 @@ const getSpreadsheetRecords = <T>(
   return getSheetRecords<T>(sheet, scheme);
 };
 
-const toCast = (value: any, fieldType: SpreadsheetFieldType) => {
+const toCast = (
+  value: any,
+  fieldType: SpreadsheetFieldType
+): number | string => {
   switch (fieldType) {
     case 'number':
       return parseInt(value).toFixed();
