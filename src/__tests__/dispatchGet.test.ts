@@ -1,6 +1,6 @@
 import { dispatchGet, createMockProvider } from '../index';
 
-describe('get.test', () => {
+describe('dispatchGet', () => {
   it('params is empty', () => {
     // Given
     const params = {};
