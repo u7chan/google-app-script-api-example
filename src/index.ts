@@ -45,6 +45,13 @@ class InvalidResourceError extends Error {
 // dispatcher
 // ----------------------------------------------------------------------------
 
+/**
+ * GETメソッドの振り分け処理
+ *
+ * @param dataProvider データプロバイダー
+ * @param params KeyValue形式のオブジェクト
+ * @returns Result
+ */
 export const dispatchGet = (
   dataProvider: DataProvider,
   params: Params
@@ -67,11 +74,18 @@ export const dispatchGet = (
   }
 };
 
-export const dispatchPost = (contentType: string, rawJSON: string): Object => {
+/**
+ * POSTメソッドの振り分け処理
+ *
+ * @param contentType コンテンツタイプ
+ * @param rawJSON JSON文字列
+ * @returns Result
+ */
+export const dispatchPost = (contentType: string, rawJSON: string): Result => {
   try {
     return {
-      contentType,
-      body: analyzeJSON(rawJSON),
+      code: 'Success',
+      message: 'TODO',
     };
   } catch {
     return {
@@ -102,6 +116,12 @@ const doPost = (e: GoogleAppsScript.Events.DoPost) => {
 // api utils
 // ----------------------------------------------------------------------------
 
+/**
+ * GoogleAppsScriptがサポートするJSON形式のレスポンスを生成する
+ *
+ * @param data レスポンスデータ
+ * @returns TextOutput
+ */
 const createJSONResponder = (
   data: Result
 ): GoogleAppsScript.Content.TextOutput => {
@@ -111,15 +131,11 @@ const createJSONResponder = (
   return response;
 };
 
-const analyzeJSON = (rawJSON: string): object | null => {
-  try {
-    return JSON.parse(rawJSON);
-  } catch {
-    return null;
-  }
-};
-
 /**
+ * 文字列からリソースへ変換
+ *
+ * @param resource 文字列
+ * @returns Resource
  * @throws {InvalidResourceError}
  */
 const toResource = (resource: string): Resource => {
@@ -157,6 +173,12 @@ const notImplementedMocks = {
   },
 };
 
+/**
+ * モック用のデータプロバイダーを生成
+ *
+ * @param mocks モックオブジェクト
+ * @returns DataProvider
+ */
 export const createMockProvider = (
   mocks: {
     readMock?: (resource: Resource, params: Params) => any;
@@ -193,10 +215,18 @@ type SpreadsheetScheme = {
 // spreadsheet api
 // ----------------------------------------------------------------------------
 
+/**
+ * スプレッドシートからレコードを取得する
+ *
+ * @param fileName ファイル名
+ * @param sheetName シート名
+ * @param sheetScheme スキーム
+ * @returns レコード
+ */
 const getSpreadsheetRecords = <T>(
   fileName: string,
   sheetName: string,
-  scheme: SpreadsheetScheme[]
+  sheetScheme: SpreadsheetScheme[]
 ): T[] => {
   const spreadsheet = getSpreadsheetByName(fileName);
   if (!spreadsheet) {
@@ -208,9 +238,16 @@ const getSpreadsheetRecords = <T>(
   if (!sheet) {
     throw new Error(createErrorString(ERROR_OPEN_SHEET_FAILED, [sheetName]));
   }
-  return getSheetRecords<T>(sheet, scheme);
+  return getSheetRecords<T>(sheet, sheetScheme);
 };
 
+/**
+ * キャスト処理
+ *
+ * @param value 値
+ * @param fieldType スプレッドシートの値型
+ * @returns 値
+ */
 const toCast = (
   value: any,
   fieldType: SpreadsheetFieldType
@@ -223,6 +260,13 @@ const toCast = (
   }
 };
 
+/**
+ * シートからレコードを取得する
+ *
+ * @param sheet シート名
+ * @param sheetScheme スキーム
+ * @returns レコード
+ */
 const getSheetRecords = <T>(
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
   sheetScheme: SpreadsheetScheme[]
