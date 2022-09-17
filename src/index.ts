@@ -28,6 +28,7 @@ type Resource = keyof Resources;
 const resourceKeys: string[] = ['accounts', 'tasks'] as Array<keyof Resources>;
 
 type Result = ApiError | Accounts | Tasks;
+type Params = { [key: string]: string };
 
 // ----------------------------------------------------------------------------
 // errors
@@ -44,15 +45,20 @@ class InvalidResourceError extends Error {
 // dispatcher
 // ----------------------------------------------------------------------------
 
-export const dispatchGet = (params: { [key: string]: string }): Result => {
+export const dispatchGet = (
+  dataProvider: DataProvider,
+  params: Params
+): Result => {
   try {
-    const { path: resource = ``, ...rest } = params;
-    return dataProvider(toResource(resource), rest);
+    const { path: resource = '', ...rest } = params;
+    return dataProvider.read(toResource(resource), rest);
   } catch (e: unknown) {
-    const code = `Error`;
-    let message = `Internal Server Error`;
+    const code = 'Error';
+    let message = 'Internal Server Error';
     if (e instanceof InvalidResourceError) {
       message = e.message;
+    } else {
+      console.error(e);
     }
     return {
       code,
@@ -81,7 +87,7 @@ export const dispatchPost = (contentType: string, rawJSON: string): Object => {
 
 const doGet = (e: GoogleAppsScript.Events.DoGet) => {
   const { parameter: params } = e;
-  return createJSONResponder(dispatchGet(params));
+  return createJSONResponder(dispatchGet(dataProvider, params));
 };
 
 const doPost = (e: GoogleAppsScript.Events.DoPost) => {
@@ -128,15 +134,43 @@ const toResource = (resource: string): Resource => {
 // ----------------------------------------------------------------------------
 
 type DataProvider = {
-  read: <T extends Result>() => T;
-  readMany: <T extends Result>() => T[];
+  read: <T extends Result>(resource: Resource, params: Params) => T;
   create: <T extends Result>(data: T) => void;
   delete: (resource: Resource, id: string) => void;
 };
 
-const dataProvider = <T extends Result>(
-  resource: Resource,
-  params: { [key: string]: string }
-): T => {
-  return {} as any; // TODO
+const SpreadsheetProvider: DataProvider = {
+  read: <T extends Result>(resource: Resource, params: Params): T => {
+    throw new Error('Function not implemented.');
+  },
+  create: <T extends Result>(data: T): void => {
+    throw new Error('Function not implemented.');
+  },
+  delete: (resource: keyof Resources, id: string): void => {
+    throw new Error('Function not implemented.');
+  },
 };
+
+const notImplementedMocks = {
+  readMock: () => {
+    throw new Error(`'readMock' not implemented.`);
+  },
+};
+
+export const createMockProvider = (
+  mocks: {
+    readMock?: (resource: Resource, params: Params) => any;
+  } = notImplementedMocks
+): DataProvider => ({
+  read: <T extends Result>(resource: Resource, params: Params): T => {
+    return mocks.readMock(resource, params);
+  },
+  create: <T extends Result>(data: T): void => {
+    throw new Error('Function not implemented.');
+  },
+  delete: (resource: keyof Resources, id: string): void => {
+    throw new Error('Function not implemented.');
+  },
+});
+
+const dataProvider: DataProvider = SpreadsheetProvider; // inject
