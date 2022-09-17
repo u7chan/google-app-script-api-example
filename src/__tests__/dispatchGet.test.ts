@@ -1,11 +1,11 @@
-import { dispatchGet, createMockProvider } from '../index';
+import { dispatchGet, createMockDataProvider } from '../index';
 
 describe('dispatchGet', () => {
   it('params is empty', () => {
     // Given
     const params = {};
     const expected = { code: 'Error', message: 'Invalid Resource' };
-    const dataProvider = createMockProvider();
+    const dataProvider = createMockDataProvider();
 
     // When
     const actual = dispatchGet(dataProvider, params);
@@ -18,7 +18,7 @@ describe('dispatchGet', () => {
     // Given
     const params = { path: 'any' };
     const expected = { code: 'Error', message: 'Invalid Resource' };
-    const dataProvider = createMockProvider();
+    const dataProvider = createMockDataProvider();
 
     // When
     const actual = dispatchGet(dataProvider, params);
@@ -30,10 +30,10 @@ describe('dispatchGet', () => {
   it('path is accounts', () => {
     // Given
     const expectedPath = 'accounts';
-    const expectedAnyParams = { anyField: '#Value' };
+    const expectedAnyParams = { anyField: '#value' };
     const params = { path: expectedPath, ...expectedAnyParams };
     const readMock = jest.fn();
-    const dataProvider = createMockProvider({
+    const dataProvider = createMockDataProvider({
       readMock,
     });
 

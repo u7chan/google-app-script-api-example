@@ -1,6 +1,10 @@
-// ----------------------------------------------------------------------------
+// ============================================================================
+// api
+// ============================================================================
+
+// ------------------------------------
 // api types
-// ----------------------------------------------------------------------------
+// ------------------------------------
 
 type ApiError = {
   code?: string;
@@ -30,9 +34,9 @@ const resourceKeys: string[] = ['accounts', 'tasks'] as Array<keyof Resources>;
 type Result = ApiError | Accounts | Tasks;
 type Params = { [key: string]: string };
 
-// ----------------------------------------------------------------------------
-// errors
-// ----------------------------------------------------------------------------
+// ------------------------------------
+// api errors
+// ------------------------------------
 
 class InvalidResourceError extends Error {
   constructor() {
@@ -41,9 +45,9 @@ class InvalidResourceError extends Error {
   }
 }
 
-// ----------------------------------------------------------------------------
-// dispatcher
-// ----------------------------------------------------------------------------
+// ------------------------------------
+// api dispatcher
+// ------------------------------------
 
 /**
  * GETメソッドの振り分け処理
@@ -95,9 +99,9 @@ export const dispatchPost = (contentType: string, rawJSON: string): Result => {
   }
 };
 
-// ----------------------------------------------------------------------------
+// ------------------------------------
 // api handler
-// ----------------------------------------------------------------------------
+// ------------------------------------
 
 const doGet = (e: GoogleAppsScript.Events.DoGet) => {
   const { parameter: params } = e;
@@ -112,9 +116,9 @@ const doPost = (e: GoogleAppsScript.Events.DoPost) => {
   return createJSONResponder(dispatchPost(contentType, contents));
 };
 
-// ----------------------------------------------------------------------------
+// ------------------------------------
 // api utils
-// ----------------------------------------------------------------------------
+// ------------------------------------
 
 /**
  * GoogleAppsScriptがサポートするJSON形式のレスポンスを生成する
@@ -145,9 +149,13 @@ const toResource = (resource: string): Resource => {
   return resource as Resource;
 };
 
-// ----------------------------------------------------------------------------
+// ============================================================================
 // data
-// ----------------------------------------------------------------------------
+// ============================================================================
+
+// ------------------------------------
+// interface
+// ------------------------------------
 
 type DataProvider = {
   read: <T extends Result>(resource: Resource, params: Params) => T;
@@ -155,7 +163,11 @@ type DataProvider = {
   delete: (resource: Resource, id: string) => void;
 };
 
-const SpreadsheetProvider: DataProvider = {
+// ------------------------------------
+// spreadsheet data provider
+// ------------------------------------
+
+const SpreadsheetDataProvider: DataProvider = {
   read: <T extends Result>(resource: Resource, params: Params): T => {
     throw new Error('Function not implemented.');
   },
@@ -166,6 +178,10 @@ const SpreadsheetProvider: DataProvider = {
     throw new Error('Function not implemented.');
   },
 };
+
+// ------------------------------------
+// mock data provider
+// ------------------------------------
 
 const notImplementedMocks = {
   readMock: () => {
@@ -179,7 +195,7 @@ const notImplementedMocks = {
  * @param mocks モックオブジェクト
  * @returns DataProvider
  */
-export const createMockProvider = (
+export const createMockDataProvider = (
   mocks: {
     readMock?: (resource: Resource, params: Params) => any;
   } = notImplementedMocks
@@ -195,11 +211,15 @@ export const createMockProvider = (
   },
 });
 
-const dataProvider: DataProvider = SpreadsheetProvider; // inject
+const dataProvider: DataProvider = SpreadsheetDataProvider; // inject
 
-// ----------------------------------------------------------------------------
+// ============================================================================
+// spreadsheet
+// ============================================================================
+
+// ------------------------------------
 // spreadsheet types
-// ----------------------------------------------------------------------------
+// ------------------------------------
 
 const ERROR_OPEN_SPREADSHEET_FAILED = `[ERROR] Open SpreadSheet Failed: "{0}"`;
 const ERROR_OPEN_SHEET_FAILED = `[ERROR] Open Sheet Failed: "{0}"`;
@@ -211,9 +231,9 @@ type SpreadsheetScheme = {
   fieldType: SpreadsheetFieldType;
 };
 
-// ----------------------------------------------------------------------------
+// ------------------------------------
 // spreadsheet api
-// ----------------------------------------------------------------------------
+// ------------------------------------
 
 /**
  * スプレッドシートからレコードを取得する
@@ -284,9 +304,9 @@ const getSheetRecords = <T>(
     });
 };
 
-// ----------------------------------------------------------------------------
+// ------------------------------------
 // spreadsheet utils
-// ----------------------------------------------------------------------------
+// ------------------------------------
 
 /**
  * ファイル名でスプレッドシートのオブジェクトを取得する
